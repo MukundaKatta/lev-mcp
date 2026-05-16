@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.MukundaKatta/lev",
+  "description": "MCP server: string-distance metrics (Levenshtein, Damerau, Jaro-Winkler, similarity).",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/MukundaKatta/lev-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/MukundaKatta/lev-mcp",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mukundakatta/lev-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
