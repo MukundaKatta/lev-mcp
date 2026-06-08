@@ -8,6 +8,7 @@ import {
   jaroWinkler,
   similarity,
   allMetrics,
+  callDistance,
 } from '../src/server.js';
 
 test('levenshtein basic', () => {
@@ -53,4 +54,41 @@ test('allMetrics returns all five fields', () => {
   assert.equal(typeof r.jaro, 'number');
   assert.equal(typeof r.jaro_winkler, 'number');
   assert.equal(typeof r.similarity, 'number');
+});
+
+test('jaro-winkler matches the canonical MARTHA/MARHTA value', () => {
+  // Reference Jaro-Winkler for MARTHA vs MARHTA is ~0.9611 (prefix MAR boosts Jaro).
+  assert.ok(Math.abs(jaroWinkler('MARTHA', 'MARHTA') - 0.9611) < 0.001);
+});
+
+test('damerau-levenshtein handles empty inputs', () => {
+  assert.equal(damerauLevenshtein('', ''), 0);
+  assert.equal(damerauLevenshtein('', 'abc'), 3);
+  assert.equal(damerauLevenshtein('abc', ''), 3);
+});
+
+test('callDistance returns metrics for valid string input', () => {
+  const res = callDistance({ a: 'kitten', b: 'sitting' });
+  assert.notEqual(res.isError, true);
+  const parsed = JSON.parse(res.content[0].text);
+  assert.equal(parsed.levenshtein, 3);
+  assert.equal(parsed.a, 'kitten');
+  assert.equal(parsed.b, 'sitting');
+});
+
+test('callDistance rejects missing arguments', () => {
+  const res = callDistance({ a: 'abc' });
+  assert.equal(res.isError, true);
+  assert.match(res.content[0].text, /requires string arguments/);
+});
+
+test('callDistance rejects non-string arguments', () => {
+  const res = callDistance({ a: 5, b: 'abc' });
+  assert.equal(res.isError, true);
+  assert.match(res.content[0].text, /requires string arguments/);
+});
+
+test('callDistance handles undefined args without throwing', () => {
+  const res = callDistance(undefined);
+  assert.equal(res.isError, true);
 });

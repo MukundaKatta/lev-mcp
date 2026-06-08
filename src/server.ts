@@ -132,6 +132,24 @@ function round(n: number): number {
   return Math.round(n * 10000) / 10000;
 }
 
+export interface ToolResult {
+  content: { type: 'text'; text: string }[];
+  isError?: boolean;
+  [key: string]: unknown;
+}
+
+/**
+ * Dispatch a `distance` tool call. Validates that `a` and `b` are strings and
+ * returns a structured result (or an error result for invalid input).
+ */
+export function callDistance(args: unknown): ToolResult {
+  const params = (args ?? {}) as Record<string, unknown>;
+  if (typeof params.a !== 'string' || typeof params.b !== 'string') {
+    return errorResult('distance requires string arguments "a" and "b"');
+  }
+  return jsonResult(allMetrics(params.a, params.b));
+}
+
 const server = new Server({ name: 'lev', version: VERSION }, { capabilities: { tools: {} } });
 
 const TOOLS = [
@@ -156,17 +174,16 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
   const { name, arguments: args } = req.params;
   try {
     if (name !== 'distance') return errorResult('unknown tool: ' + name);
-    const a = args as unknown as { a: string; b: string };
-    return jsonResult(allMetrics(a.a, a.b));
+    return callDistance(args);
   } catch (err) {
     return errorResult('lev failed: ' + (err as Error).message);
   }
 });
 
-function jsonResult(value: unknown) {
+function jsonResult(value: unknown): ToolResult {
   return { content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] };
 }
-function errorResult(message: string) {
+function errorResult(message: string): ToolResult {
   return { isError: true, content: [{ type: 'text', text: message }] };
 }
 
